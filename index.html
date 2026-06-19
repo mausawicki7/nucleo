@@ -24,12 +24,15 @@
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
+  html{overflow-x:hidden}
   body{
     margin:0;background:var(--ink);color:var(--paper);
     font-family:"Inter",system-ui,sans-serif;font-size:16px;line-height:1.55;
-    -webkit-font-smoothing:antialiased;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
   }
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  h1,h2,h3,h4,h5,p,li{overflow-wrap:break-word}
+  .hook .inner>div,.cols>.card,.why>.item,.outcomes>.oc,.beyond>.by,.foot-inner>div,.refs>.ref,.refstats>.rs{min-width:0}
 
   /* topographic strata — the signature: the platform is the layer underneath */
   .strata{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
@@ -63,7 +66,7 @@
 
   /* HOOK */
   .hook{position:relative;background:var(--surface);border-bottom:1px solid var(--line)}
-  .hook .inner{padding:34px 0;display:grid;grid-template-columns:1.1fr 1fr;gap:38px}
+  .hook .inner{padding-block:34px;display:grid;grid-template-columns:1.1fr 1fr;gap:38px}
   .hook h2{
     font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:24px;
     line-height:1.2;letter-spacing:-.01em;margin:10px 0 0;color:var(--paper);
@@ -199,7 +202,7 @@
     .hero{padding:46px 0 30px}
     .hero .brandrow{margin-bottom:30px}
     section.block{padding:36px 0}
-    .hook .inner{padding:28px 0;gap:24px}
+    .hook .inner{padding-block:28px;gap:24px}
     .cols{gap:18px}
     .sec-head .refmark{display:none}
   }
@@ -211,8 +214,12 @@
     .brandrow .who{font-size:11px}
   }
   @media (prefers-reduced-motion:no-preference){
-    .reveal{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+    .reveal{opacity:0;transform:translateY(28px);animation:rise .9s cubic-bezier(.16,.84,.34,1) forwards}
     @keyframes rise{to{opacity:1;transform:none}}
+    /* scroll reveal: hidden+down until in view, then glide up — only when JS is active */
+    body.js-reveal .anim{opacity:0;transform:translateY(36px);
+      transition:opacity .85s cubic-bezier(.16,.84,.34,1), transform .85s cubic-bezier(.16,.84,.34,1)}
+    body.js-reveal .anim.in{opacity:1;transform:none}
   }
   @media print{
     body{background:#fff;color:#1A1612;font-size:11px}
@@ -222,7 +229,7 @@
     .hero,.hook,section.block,.foot,.flow{border-color:#ddd}
     .hook,.card,.oc,.by,.ph,.ref,.rs,.anexo{background:#fff !important}
     h1.logo,.tagline,.sec-head h3,.card h4,.cta h3,.by .t,.ph .pt,.contact .name,.ref .rn,.rs .big,.step .st{color:#1A1612 !important}
-    .reveal{opacity:1 !important;transform:none !important;animation:none !important}
+    .reveal,.anim{opacity:1 !important;transform:none !important;animation:none !important;transition:none !important}
     section.block{padding:20px 0}
     /* keep the desktop multi-column layout in PDF regardless of page width */
     .hook .inner{grid-template-columns:1.1fr 1fr}
@@ -463,10 +470,13 @@
 
 <script>
   if (matchMedia('(prefers-reduced-motion: no-preference)').matches){
-    const io = new IntersectionObserver((es)=>{
-      es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('reveal'); io.unobserve(e.target);} });
-    },{threshold:.12});
-    document.querySelectorAll('section.block .sec-head, .card, .oc, .by, .ph, .cta, .contact').forEach(el=>io.observe(el));
+    document.body.classList.add('js-reveal');
+    var targets = document.querySelectorAll('section.block .sec-head, .card, .oc, .by, .ph, .flow .step, .ref, .rs, .refnote, .cta, .contact');
+    targets.forEach(function(el){ el.classList.add('anim'); });
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, {threshold:.12, rootMargin:'0px 0px -6% 0px'});
+    targets.forEach(function(el){ io.observe(el); });
   }
 </script>
 </body>
